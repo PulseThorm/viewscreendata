@@ -4,8 +4,62 @@ var permissionsDataEl = document.getElementById("permissionsData");
 var compatibilityDataEl = document.getElementById("compatibilityData");
 var jsonOutputEl = document.getElementById("jsonOutput");
 var envStatusEl = document.getElementById("envStatus");
+var screenIdValueEl = document.getElementById("screenIdValue");
 var refreshBtn = document.getElementById("refreshBtn");
 var exportBtn = document.getElementById("exportBtn");
+var SCREEN_ID_STORAGE_KEY = "viewscreendata.screenId";
+
+function randomHex(length) {
+  var chars = "";
+  var i;
+  var part;
+
+  for (i = 0; i < length; i += 1) {
+    if (window.crypto && crypto.getRandomValues) {
+      part = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+    } else {
+      part = Math.floor(Math.random() * 16);
+    }
+
+    chars += part.toString(16);
+  }
+
+  return chars;
+}
+
+function makeScreenId() {
+  if (window.crypto && crypto.randomUUID) {
+    return "sid-" + crypto.randomUUID();
+  }
+
+  return "sid-" + randomHex(8) + "-" + randomHex(4) + "-" + randomHex(4) + "-" + randomHex(4) + "-" + randomHex(12);
+}
+
+function getOrCreateScreenId() {
+  var existing = null;
+
+  try {
+    existing = window.localStorage ? localStorage.getItem(SCREEN_ID_STORAGE_KEY) : null;
+  } catch (error) {
+    existing = null;
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  existing = makeScreenId();
+
+  try {
+    if (window.localStorage) {
+      localStorage.setItem(SCREEN_ID_STORAGE_KEY, existing);
+    }
+  } catch (error) {
+    // If storage is unavailable, keep the in-memory id for this session.
+  }
+
+  return existing;
+}
 
 function isObject(value) {
   return value !== null && typeof value === "object";
@@ -114,9 +168,12 @@ function readPermissions() {
 function collectData(permissions) {
   var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   var screen = window.screen || {};
+  var screenId = getOrCreateScreenId();
 
   return {
+    screenId: screenId,
     browser: {
+      screenId: screenId,
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
@@ -164,6 +221,7 @@ function refreshView() {
 
   return readPermissions().then(function (permissions) {
     var snapshot = collectData(permissions);
+    screenIdValueEl.textContent = snapshot.screenId;
 
     renderList(browserDataEl, Object.keys(snapshot.browser).map(function (key) {
       return [key, snapshot.browser[key]];

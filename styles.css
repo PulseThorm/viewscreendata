@@ -98,6 +98,30 @@ button {
   margin-top: 10px;
 }
 
+.idbar {
+  margin-bottom: 10px;
+}
+
+.idline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.idvalue {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+
+.idnote {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: right;
+}
+
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -187,6 +211,15 @@ button {
   }
 
   .kv dd {
+    text-align: left;
+  }
+
+  .idline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .idnote {
     text-align: left;
   }
 }
