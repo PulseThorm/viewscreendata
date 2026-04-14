@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ViewScreenData</title>
+    <meta
+      name="description"
+      content="Vista para inspeccionar lo que el navegador expone sobre la pantalla y el entorno del usuario."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Browser telemetry viewer</p>
+          <h1>Datos visibles desde el navegador</h1>
+          <p class="lede">
+            Esta vista muestra lo que una web puede conocer por defecto y, si el
+            usuario lo permite, tambien los metadatos de una pantalla compartida.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button id="refreshBtn" class="primary">Actualizar datos</button>
+          <button id="exportBtn" class="secondary">Exportar JSON</button>
+          <button id="shareBtn" class="accent">Compartir pantalla</button>
+          <button id="stopShareBtn" class="ghost" disabled>Detener captura</button>
+        </div>
+      </section>
+
+      <section class="notice">
+        <strong>Importante:</strong> el navegador no deja leer la pantalla completa
+        sin permiso explicito del usuario. Esta demo captura informacion del
+        entorno, resolucion, idioma, zona horaria y, si autorizas, metadatos de la
+        pantalla compartida.
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Entorno del navegador</h2>
+            <span id="envStatus" class="status">Listo</span>
+          </div>
+          <div id="browserData" class="content"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Pantalla y ventana</h2>
+            <span class="status">Auto</span>
+          </div>
+          <div id="screenData" class="content"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Permisos y conexion</h2>
+            <span class="status">Auto</span>
+          </div>
+          <div id="permissionsData" class="content"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Vista compartida</h2>
+            <span id="shareState" class="status muted">Sin captura</span>
+          </div>
+          <div class="preview-wrap">
+            <video id="preview" autoplay playsinline muted></video>
+            <div id="shareData" class="content"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel wide">
+        <div class="panel-head">
+          <h2>Payload completo</h2>
+          <span class="status">JSON</span>
+        </div>
+        <pre id="jsonOutput" class="json"></pre>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
