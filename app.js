@@ -69,6 +69,18 @@ function isTizenRuntime() {
   return !!window.tizen || /Tizen/i.test(navigator.userAgent || "");
 }
 
+function getTimeZone() {
+  try {
+    if (window.Intl && Intl.DateTimeFormat) {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
+    }
+  } catch (error) {
+    return "No disponible";
+  }
+
+  return "No disponible";
+}
+
 function readPermissions() {
   var results = [];
   var names = ["geolocation", "camera", "microphone", "notifications"];
@@ -113,7 +125,7 @@ function collectData(permissions) {
       hardwareConcurrency: navigator.hardwareConcurrency,
       deviceMemory: navigator.deviceMemory !== undefined ? navigator.deviceMemory : "No disponible",
       maxTouchPoints: navigator.maxTouchPoints,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timeZone: getTimeZone(),
       referrer: document.referrer || "Ninguno"
     },
     screenData: {
