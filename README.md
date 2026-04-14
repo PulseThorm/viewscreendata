@@ -1,22 +1,14 @@
 # ViewScreenData
 
-Vista estatica para inspeccionar los datos que un navegador puede exponer sobre el entorno, la pantalla y una pantalla compartida con permiso del usuario.
+Vista simple para inspeccionar datos basicos del navegador.
 
-## Que captura
+## Incluye
 
-- `userAgent`, `platform`, idioma, zona horaria, cookies, `devicePixelRatio`
-- resolución de pantalla, área disponible, tamaño de ventana y viewport
-- conexión de red, concurrencia, memoria del dispositivo cuando el navegador la expone
-- permisos conocidos por la Permissions API
-- metadatos de una pantalla compartida usando `getDisplayMedia`
-
-## Como probar
-
-Abre `index.html` en un servidor local o subelo a GitHub Pages.
+- `screenId` persistente generado por la app
+- datos de navegador
+- datos de pantalla
+- indicadores basicos de compatibilidad
 
 ## Nota
 
-El navegador no permite acceder de forma silenciosa a la pantalla real ni a sus pixeles sin permiso explicito del usuario.
-"# viewscreendata" 
-"# viewscreendata" 
-"# viewscreendata" 
+No usa `Promise`, `async/await` ni grid/flex para mejorar la compatibilidad con browsers embebidos antiguos como Tizen.

@@ -1,42 +1,22 @@
 var browserDataEl = document.getElementById("browserData");
 var screenDataEl = document.getElementById("screenData");
-var permissionsDataEl = document.getElementById("permissionsData");
 var compatibilityDataEl = document.getElementById("compatibilityData");
-var jsonOutputEl = document.getElementById("jsonOutput");
-var envStatusEl = document.getElementById("envStatus");
 var screenIdValueEl = document.getElementById("screenIdValue");
 var refreshBtn = document.getElementById("refreshBtn");
-var exportBtn = document.getElementById("exportBtn");
 var SCREEN_ID_STORAGE_KEY = "viewscreendata.screenId";
 
-function randomHex(length) {
-  var chars = "";
-  var i;
-  var part;
-
-  for (i = 0; i < length; i += 1) {
-    if (window.crypto && crypto.getRandomValues) {
-      part = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
-    } else {
-      part = Math.floor(Math.random() * 16);
+function getTimeZone() {
+  try {
+    if (window.Intl && Intl.DateTimeFormat) {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
     }
+  } catch (error) {}
 
-    chars += part.toString(16);
-  }
-
-  return chars;
-}
-
-function makeScreenId() {
-  if (window.crypto && crypto.randomUUID) {
-    return "sid-" + crypto.randomUUID();
-  }
-
-  return "sid-" + randomHex(8) + "-" + randomHex(4) + "-" + randomHex(4) + "-" + randomHex(4) + "-" + randomHex(12);
+  return "No disponible";
 }
 
 function getOrCreateScreenId() {
-  var existing = null;
+  var existing;
 
   try {
     existing = window.localStorage ? localStorage.getItem(SCREEN_ID_STORAGE_KEY) : null;
@@ -48,221 +28,94 @@ function getOrCreateScreenId() {
     return existing;
   }
 
-  existing = makeScreenId();
+  existing = "sid-" + String(new Date().getTime()) + "-" + String(Math.floor(Math.random() * 1000000));
 
   try {
     if (window.localStorage) {
       localStorage.setItem(SCREEN_ID_STORAGE_KEY, existing);
     }
-  } catch (error) {
-    // If storage is unavailable, keep the in-memory id for this session.
-  }
+  } catch (error) {}
 
   return existing;
 }
 
-function isObject(value) {
-  return value !== null && typeof value === "object";
-}
+function getConnectionValue(key) {
+  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 
-function toDisplay(value) {
-  if (value === null || value === undefined) {
-    return "N/D";
+  if (!connection) {
+    return "No disponible";
   }
 
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return "[]";
-    }
-
-    if (value.some(function (item) {
-      return isObject(item);
-    })) {
-      return JSON.stringify(value);
-    }
-
-    return value.join(", ");
-  }
-
-  if (isObject(value)) {
-    try {
-      return JSON.stringify(value);
-    } catch (error) {
-      return "[object]";
-    }
-  }
-
-  return String(value);
-}
-
-function renderList(target, items) {
-  var html = "";
-  var i;
-
-  for (i = 0; i < items.length; i += 1) {
-    html +=
-      '<dl class="kv"><dt>' +
-      items[i][0] +
-      "</dt><dd>" +
-      toDisplay(items[i][1]) +
-      "</dd></dl>";
-  }
-
-  target.innerHTML = html;
-}
-
-function supportsPermissionsApi() {
-  return !!(navigator.permissions && navigator.permissions.query);
+  return connection[key] !== undefined && connection[key] !== null ? connection[key] : "No disponible";
 }
 
 function supportsNetworkInfo() {
-  return !!navigator.connection;
+  return !!(navigator.connection || navigator.mozConnection || navigator.webkitConnection);
 }
 
 function isTizenRuntime() {
   return !!window.tizen || /Tizen/i.test(navigator.userAgent || "");
 }
 
-function getTimeZone() {
-  try {
-    if (window.Intl && Intl.DateTimeFormat) {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
-    }
-  } catch (error) {
-    return "No disponible";
-  }
-
-  return "No disponible";
-}
-
-function readPermissions() {
-  var results = [];
-  var names = ["geolocation", "camera", "microphone", "notifications"];
-  var chain = Promise.resolve();
+function renderRows(target, rows) {
+  var html = "";
   var i;
 
-  if (!supportsPermissionsApi()) {
-    return Promise.resolve([["Permissions API", "No disponible"]]);
+  for (i = 0; i < rows.length; i += 1) {
+    html += '<div class="row"><div class="key">' + rows[i][0] + '</div><div class="value">' + rows[i][1] + '</div></div>';
   }
 
-  for (i = 0; i < names.length; i += 1) {
-    (function (name) {
-      chain = chain.then(function () {
-        return navigator.permissions
-          .query({ name: name })
-          .then(function (status) {
-            results.push([name, status.state]);
-          })
-          .catch(function () {
-            results.push([name, "No soportado"]);
-          });
-      });
-    })(names[i]);
-  }
-
-  return chain.then(function () {
-    return results;
-  });
+  target.innerHTML = html;
 }
 
-function collectData(permissions) {
-  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+function collectSnapshot() {
   var screen = window.screen || {};
   var screenId = getOrCreateScreenId();
 
   return {
     screenId: screenId,
-    browser: {
-      screenId: screenId,
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      language: navigator.language,
-      cookies: navigator.cookieEnabled,
-      online: navigator.onLine,
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      deviceMemory: navigator.deviceMemory !== undefined ? navigator.deviceMemory : "No disponible",
-      maxTouchPoints: navigator.maxTouchPoints,
-      timeZone: getTimeZone(),
-      referrer: document.referrer || "Ninguno"
-    },
-    screenData: {
-      width: screen.width,
-      height: screen.height,
-      availWidth: screen.availWidth,
-      availHeight: screen.availHeight,
-      colorDepth: screen.colorDepth,
-      pixelDepth: screen.pixelDepth,
-      pixelRatio: window.devicePixelRatio,
-      viewport: {
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight
-      }
-    },
-    permissionsData: {
-      permissions: permissions,
-      effectiveType: connection && connection.effectiveType ? connection.effectiveType : "No disponible",
-      downlink: connection && connection.downlink !== undefined ? connection.downlink : "No disponible",
-      rtt: connection && connection.rtt !== undefined ? connection.rtt : "No disponible",
-      saveData: connection && connection.saveData !== undefined ? connection.saveData : "No disponible",
-      type: connection && connection.type ? connection.type : "No disponible"
-    },
-    compatibility: {
-      tizenRuntime: isTizenRuntime(),
-      permissionsApi: supportsPermissionsApi(),
-      networkInformationApi: supportsNetworkInfo(),
-      storageEstimateApi: !!(navigator.storage && navigator.storage.estimate)
-    },
-    timestamp: new Date().toISOString()
+    browser: [
+      ["screenId", screenId],
+      ["userAgent", navigator.userAgent],
+      ["platform", navigator.platform],
+      ["language", navigator.language],
+      ["cookies", navigator.cookieEnabled],
+      ["online", navigator.onLine],
+      ["hardwareConcurrency", navigator.hardwareConcurrency || "No disponible"],
+      ["deviceMemory", navigator.deviceMemory !== undefined ? navigator.deviceMemory : "No disponible"],
+      ["maxTouchPoints", navigator.maxTouchPoints || 0],
+      ["timeZone", getTimeZone()],
+      ["referrer", document.referrer || "Ninguno"]
+    ],
+    screenData: [
+      ["width", screen.width],
+      ["height", screen.height],
+      ["availWidth", screen.availWidth],
+      ["availHeight", screen.availHeight],
+      ["colorDepth", screen.colorDepth],
+      ["pixelDepth", screen.pixelDepth],
+      ["pixelRatio", window.devicePixelRatio],
+      ["innerWidth", window.innerWidth],
+      ["innerHeight", window.innerHeight]
+    ],
+    compatibility: [
+      ["tizenRuntime", isTizenRuntime()],
+      ["permissionsApi", !!(navigator.permissions && navigator.permissions.query)],
+      ["networkInformationApi", supportsNetworkInfo()],
+      ["storageApi", !!window.localStorage]
+    ]
   };
 }
 
 function refreshView() {
-  envStatusEl.textContent = "Actualizando";
+  var snapshot = collectSnapshot();
 
-  return readPermissions().then(function (permissions) {
-    var snapshot = collectData(permissions);
-    screenIdValueEl.textContent = snapshot.screenId;
-
-    renderList(browserDataEl, Object.keys(snapshot.browser).map(function (key) {
-      return [key, snapshot.browser[key]];
-    }));
-
-    renderList(screenDataEl, Object.keys(snapshot.screenData).map(function (key) {
-      return [key, snapshot.screenData[key]];
-    }));
-
-    renderList(permissionsDataEl, Object.keys(snapshot.permissionsData).map(function (key) {
-      return [key, snapshot.permissionsData[key]];
-    }));
-
-    renderList(compatibilityDataEl, Object.keys(snapshot.compatibility).map(function (key) {
-      return [key, snapshot.compatibility[key]];
-    }));
-
-    jsonOutputEl.textContent = JSON.stringify(snapshot, null, 2);
-    envStatusEl.textContent = "Listo";
-  }).catch(function (error) {
-    console.warn(error);
-    envStatusEl.textContent = "Error";
-  });
+  screenIdValueEl.innerHTML = snapshot.screenId;
+  renderRows(browserDataEl, snapshot.browser);
+  renderRows(screenDataEl, snapshot.screenData);
+  renderRows(compatibilityDataEl, snapshot.compatibility);
 }
 
-function downloadJSON() {
-  var payload = jsonOutputEl.textContent || "{}";
-  var blob = new Blob([payload], { type: "application/json" });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-
-  a.href = url;
-  a.download = "viewscreendata.json";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-refreshBtn.addEventListener("click", refreshView);
-exportBtn.addEventListener("click", downloadJSON);
-window.addEventListener("resize", refreshView);
-window.addEventListener("online", refreshView);
-window.addEventListener("offline", refreshView);
-
-refreshView();
+refreshBtn.onclick = refreshView;
+window.onresize = refreshView;
+window.onload = refreshView;

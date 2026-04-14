@@ -4,71 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ViewScreenData</title>
-    <meta
-      name="description"
-      content="Vista compacta para inspeccionar datos que expone el navegador."
-    />
+    <meta name="description" content="Vista simple para inspeccionar datos del navegador." />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="shell">
-      <header class="topbar">
+      <div class="topbar">
         <div>
-          <p class="eyebrow">Browser telemetry</p>
+          <div class="eyebrow">Browser telemetry</div>
           <h1>Datos visibles</h1>
         </div>
         <div class="actions">
-          <button id="refreshBtn" class="primary">Actualizar</button>
-          <button id="exportBtn" class="secondary">JSON</button>
+          <button id="refreshBtn" type="button">Actualizar</button>
         </div>
-      </header>
+      </div>
 
       <section class="panel idbar">
-        <div class="panel-head">
-          <h2>Screen ID</h2>
-        </div>
-        <div class="idline">
-          <span id="screenIdValue" class="idvalue">...</span>
-          <span class="idnote">Generado por la app y guardado en este navegador.</span>
-        </div>
+        <h2>Screen ID</h2>
+        <div id="screenIdValue" class="idvalue">...</div>
+        <div class="idnote">Id generado por la app y guardado en este navegador.</div>
       </section>
 
-      <section class="grid">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Browser</h2>
-            <span id="envStatus" class="status">Listo</span>
-          </div>
-          <div id="browserData" class="content"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Screen</h2>
-          </div>
-          <div id="screenData" class="content"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Network y permisos</h2>
-          </div>
-          <div id="permissionsData" class="content"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Compatibilidad</h2>
-          </div>
-          <div id="compatibilityData" class="content"></div>
-        </article>
+      <section class="panel">
+        <h2>Browser</h2>
+        <div id="browserData" class="content"></div>
       </section>
 
-      <section class="panel slim">
-        <div class="panel-head">
-          <h2>JSON</h2>
-        </div>
-        <pre id="jsonOutput" class="json"></pre>
+      <section class="panel">
+        <h2>Screen</h2>
+        <div id="screenData" class="content"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Compatibilidad</h2>
+        <div id="compatibilityData" class="content"></div>
       </section>
     </main>
 
