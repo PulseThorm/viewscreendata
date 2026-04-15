@@ -8,7 +8,8 @@ Vista simple para inspeccionar datos basicos del navegador.
 - datos de navegador
 - datos de pantalla
 - indicadores basicos de compatibilidad
+- popup propio sin dependencia obligatoria de Bootstrap
 
 ## Nota
 
-No usa `Promise`, `async/await` ni grid/flex para mejorar la compatibilidad con browsers embebidos antiguos como Tizen.
+La pagina principal vive en `index.html` y esta pensada para degradar mejor en browsers embebidos antiguos como Tizen. `app.js` y `styles.css` quedaron como archivos legacy del prototipo anterior.

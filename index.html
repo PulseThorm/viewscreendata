@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ViewScreenData | Browser Lab</title>
     <meta name="description" content="Dashboard para inspeccionar datos del navegador, aislar fallos y probar compatibilidad del runtime." />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8T94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
     <style>
       :root {
         --bg-0: #020712;
@@ -26,10 +25,77 @@
         box-sizing: border-box;
       }
 
+      /* Legacy-safe baseline so the page keeps working when CSS variables are not supported. */
       html,
       body {
         margin: 0;
         min-height: 100%;
+        background: #08111d;
+        color: #e5eefc;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        padding: 10px;
+      }
+
+      .topbar,
+      .statusbar,
+      .panel,
+      .probepanel {
+        border: 1px solid #24384d;
+        background: #0d1827;
+      }
+
+      .eyebrow {
+        color: #7dd3fc;
+      }
+
+      .subtitle,
+      .statusmeta,
+      .data-small,
+      .probe-label,
+      .probe-note {
+        color: #9eb0c8;
+      }
+
+      .panel h2 {
+        color: #e5eefc;
+      }
+
+      .modal.photo-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        overflow: auto;
+        background: rgba(2, 7, 18, 0.82);
+        z-index: 1090;
+      }
+
+      .modal.photo-modal.show {
+        display: block;
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      .photo-modal .modal-dialog {
+        width: calc(100% - 24px);
+        max-width: 1440px;
+        margin: 12px auto;
+      }
+
+      .photo-modal .modal-content {
+        background: #ffffff;
+        color: #111111;
+      }
+
+      html,
+      body {
         color: var(--text);
         font-family: "Segoe UI", Arial, Helvetica, sans-serif;
         background:
@@ -764,8 +830,8 @@
            <div id="probeData" class="probecloud"></div>
          </div>
 
-      <div id="photoPopup" class="modal photo-modal" tabindex="-1" aria-labelledby="photoPopupTitle" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable photo-dialog">
+        <div id="photoPopup" class="modal photo-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="photoPopupTitle" aria-hidden="true">
+        <div class="modal-dialog photo-dialog">
           <div class="modal-content photo-sheet">
             <div class="modal-header photo-head">
               <div class="photo-head-left">
@@ -774,7 +840,7 @@
                 <div class="photo-note">Checklist para foto: Angular 20/15 standalone, Angular 10/8 NgModule, JS ES5/ES6 y jQuery.</div>
               </div>
               <div class="photo-head-right">
-                <button id="closePopupBtn" class="btn btn-outline-dark btn-sm photo-close" type="button">Cerrar</button>
+                <button id="closePopupBtn" class="photo-close" type="button">Cerrar</button>
               </div>
             </div>
 
@@ -795,7 +861,6 @@
         </div>
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       (function () {
         var browserDataEl = document.getElementById("browserData");
@@ -964,6 +1029,37 @@
           return photoModalInstance;
         }
 
+        function setBodyModalState(isOpen) {
+          var body = document.body;
+          var className;
+
+          if (!body) {
+            return;
+          }
+
+          if (body.classList && body.classList.add && body.classList.remove) {
+            if (isOpen) {
+              body.classList.add("modal-open");
+            } else {
+              body.classList.remove("modal-open");
+            }
+
+            return;
+          }
+
+          className = body.className || "";
+
+          if (isOpen) {
+            if ((" " + className + " ").indexOf(" modal-open ") === -1) {
+              body.className = className ? className + " modal-open" : "modal-open";
+            }
+
+            return;
+          }
+
+          body.className = className.replace(/(^|\s)modal-open(\s|$)/g, " ").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+        }
+
         function showPhotoPopup() {
           if (!photoPopupEl) {
             return;
@@ -980,9 +1076,7 @@
           photoPopupEl.style.display = "block";
           photoPopupEl.className = "modal photo-modal show";
           photoPopupEl.setAttribute("aria-hidden", "false");
-          if (document.body && document.body.classList) {
-            document.body.classList.add("modal-open");
-          }
+          setBodyModalState(true);
         }
 
         function hidePhotoPopup() {
@@ -1000,9 +1094,7 @@
           photoPopupEl.style.display = "none";
           photoPopupEl.className = "modal photo-modal";
           photoPopupEl.setAttribute("aria-hidden", "true");
-          if (document.body && document.body.classList) {
-            document.body.classList.remove("modal-open");
-          }
+          setBodyModalState(false);
         }
 
         function hashString(input) {
