@@ -3,9 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ViewScreenData</title>
-    <meta name="description" content="Vista simple para inspeccionar datos del navegador." />
+    <title>ViewScreenData | Browser Lab</title>
+    <meta name="description" content="Dashboard para inspeccionar datos del navegador, aislar fallos y probar compatibilidad del runtime." />
     <style>
+      :root {
+        --bg-0: #020712;
+        --bg-1: #07111d;
+        --surface-0: rgba(11, 20, 34, 0.97);
+        --surface-1: rgba(8, 14, 25, 0.98);
+        --line: rgba(127, 151, 185, 0.18);
+        --cyan: #62d6ff;
+        --green: #58e6a5;
+        --amber: #ffbf5f;
+        --violet: #b38cff;
+        --danger: #ff7272;
+        --text: #eaf2ff;
+        --muted: #97abc7;
+      }
+
       * {
         box-sizing: border-box;
       }
@@ -14,93 +29,180 @@
       body {
         margin: 0;
         min-height: 100%;
-        background: #08111d;
-        color: #e5eefc;
-        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(98, 214, 255, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(88, 230, 165, 0.11), transparent 24%),
+          radial-gradient(circle at 50% 120%, rgba(179, 140, 255, 0.14), transparent 36%),
+          linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 45%, #040811 100%);
       }
 
       body {
-        padding: 8px;
+        padding: 10px;
       }
 
       .wrap {
         width: 100%;
+        position: relative;
+        z-index: 1;
       }
 
-      .topbar {
-        margin-bottom: 8px;
+      table.headlayout,
+      table.layout {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 10px;
+        table-layout: fixed;
       }
 
       table.headlayout {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 8px;
-        table-layout: fixed;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
 
       td.headleft {
-        width: 35%;
+        width: 34%;
         vertical-align: top;
       }
 
       td.headright {
-        width: 65%;
+        width: 66%;
+        vertical-align: top;
+      }
+
+      td.col {
+        width: 25%;
         vertical-align: top;
       }
 
       .eyebrow {
-        margin: 0 0 3px;
-        color: #7dd3fc;
+        margin: 0 0 6px;
+        color: var(--cyan);
         font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.25em;
       }
 
       h1 {
         margin: 0;
-        font-size: 24px;
-        line-height: 1.1;
+        font-size: 30px;
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+        text-shadow: 0 2px 16px rgba(0, 0, 0, 0.32);
       }
 
       .screenid-inline {
-        color: #9eb0c8;
-        font-size: 13px;
-        font-weight: 400;
-        margin-left: 6px;
+        display: inline-block;
+        margin-left: 10px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(98, 214, 255, 0.28);
+        background: rgba(98, 214, 255, 0.12);
+        color: #dff9ff;
+        font-size: 12px;
+        font-weight: 700;
+        vertical-align: middle;
         word-break: break-all;
       }
 
+      .subtitle {
+        margin-top: 10px;
+        max-width: 48ch;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
       .controls {
-        margin-top: 8px;
+        margin-top: 12px;
       }
 
       button {
-        border: 1px solid #33506b;
-        background: #102033;
-        color: #e5eefc;
-        padding: 8px 12px;
-        margin-right: 6px;
+        appearance: none;
+        border: 1px solid rgba(98, 214, 255, 0.28);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(18, 33, 52, 0.98), rgba(10, 18, 29, 0.98));
+        color: var(--text);
+        padding: 10px 16px;
+        margin-right: 8px;
         font: inherit;
         font-weight: 700;
         cursor: pointer;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
 
-      .idbar,
+      button:hover {
+        border-color: rgba(98, 214, 255, 0.48);
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(98, 214, 255, 0.06) inset;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .topbar,
+      .statusbar,
       .panel,
-      .statusbar {
-        border: 1px solid #24384d;
-        background: #0d1827;
-        padding: 10px;
+      .probepanel {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, var(--surface-0), var(--surface-1));
+        box-shadow: 0 22px 48px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .topbar {
+        padding: 14px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .topbar:after {
+        content: "";
+        position: absolute;
+        right: -50px;
+        top: -50px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(98, 214, 255, 0.12), transparent 70%);
+        pointer-events: none;
       }
 
       .summaryblock {
         margin-bottom: 8px;
       }
 
-      .statusbar h2 {
-        margin: 0 0 6px;
-        font-size: 14px;
+      .statusbar {
+        padding: 14px;
+        min-height: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .statusbar:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(98, 214, 255, 0.55), rgba(179, 140, 255, 0.45), transparent);
+      }
+
+      .statusbar h2,
+      .panel h2 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--text);
+      }
+
+      .statusmeta {
+        margin: 6px 0 8px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.4;
+        clear: both;
       }
 
       .statusline,
@@ -111,27 +213,35 @@
       .statusitem,
       .erroritem {
         display: inline-block;
-        margin: 0 8px 6px 0;
-        padding: 4px 8px;
-        border: 1px solid #223449;
-        background: #0a1421;
-        font-size: 11px;
         vertical-align: top;
+        min-width: 96px;
+        margin: 0 8px 8px 0;
+        padding: 8px 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(18, 33, 52, 0.96), rgba(8, 15, 27, 0.98));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
       }
 
       .statusitem {
-        min-width: 90px;
+        border-color: rgba(88, 230, 165, 0.24);
+        background: linear-gradient(180deg, rgba(7, 56, 49, 0.96), rgba(8, 18, 27, 0.98));
       }
 
       .erroritem {
-        min-width: 140px;
+        min-width: 160px;
+        border-color: rgba(255, 114, 114, 0.22);
+        background: linear-gradient(180deg, rgba(67, 20, 25, 0.96), rgba(24, 7, 11, 0.98));
       }
 
       .statusitem .label,
       .erroritem .label {
         display: block;
-        color: #9eb0c8;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: rgba(234, 242, 255, 0.72);
       }
 
       .statusitem .value,
@@ -139,87 +249,287 @@
         display: block;
         margin: 0;
         font-size: 12px;
-        word-break: break-word;
-      }
-
-      .statusmeta {
-        margin: 0 0 6px;
-        color: #9eb0c8;
-        font-size: 11px;
-        clear: both;
-      }
-
-      .idvalue {
-        display: block;
-        font-size: 16px;
+        line-height: 1.35;
         font-weight: 700;
-        word-break: break-all;
+        word-break: break-word;
+        color: #f4f9ff;
       }
 
-      .idnote {
-        display: block;
-        margin-top: 4px;
-        color: #9eb0c8;
-        font-size: 11px;
+      .panel {
+        padding: 14px;
+        min-height: 100%;
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
       }
 
-      table.layout {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 8px;
-        table-layout: fixed;
+      .panel:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent, var(--cyan)), transparent 88%);
       }
 
-      td.col {
-        width: 25%;
-        vertical-align: top;
+      .panel:after {
+        content: "";
+        position: absolute;
+        inset: auto -36px -36px auto;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(98, 214, 255, 0.08), transparent 68%);
+        pointer-events: none;
+      }
+
+      .col-browser .panel {
+        --accent: var(--cyan);
+      }
+
+      .col-screen .panel {
+        --accent: var(--green);
+      }
+
+      .col-runtime .panel {
+        --accent: var(--amber);
+      }
+
+      .col-compatibility .panel {
+        --accent: var(--violet);
       }
 
       .panel h2 {
-        margin: 0 0 6px;
-        font-size: 14px;
+        position: relative;
+        z-index: 1;
       }
 
       .row {
-        border: 1px solid #223449;
-        background: #0a1421;
-        padding: 6px 8px;
-        margin-bottom: 6px;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(111, 130, 160, 0.16);
+        background: linear-gradient(180deg, rgba(10, 19, 31, 0.9), rgba(7, 12, 20, 0.98));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .row:hover {
+        border-color: rgba(98, 214, 255, 0.25);
       }
 
       .key {
         margin: 0;
         color: #9eb0c8;
-        font-size: 11px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
       }
 
       .value {
-        margin: 2px 0 0;
+        margin: 4px 0 0;
         font-size: 13px;
+        line-height: 1.35;
         word-break: break-word;
+        color: #f4f8ff;
       }
 
       .small {
-        color: #9eb0c8;
+        color: var(--muted);
         font-size: 11px;
       }
 
       .errorrow {
-        border-color: #6b2c2c;
-        background: #1a0c0c;
+        border-color: rgba(255, 114, 114, 0.22);
+        background: linear-gradient(180deg, rgba(44, 15, 18, 0.96), rgba(19, 8, 10, 0.98));
+      }
+
+      .probepanel {
+        margin-top: 10px;
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .probenote {
+        margin: -2px 0 12px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .probecloud {
+        width: 100%;
+      }
+
+      .probechip {
+        display: inline-block;
+        width: 24%;
+        min-width: 180px;
+        vertical-align: top;
+        margin: 0 1% 10px 0;
+        padding: 10px 11px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(18, 33, 52, 0.96), rgba(8, 15, 27, 0.98));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .probechip-ok {
+        border-color: rgba(88, 230, 165, 0.24);
+        background: linear-gradient(180deg, rgba(7, 56, 49, 0.96), rgba(8, 18, 27, 0.98));
+      }
+
+      .probechip-fail {
+        border-color: rgba(255, 114, 114, 0.22);
+        background: linear-gradient(180deg, rgba(67, 20, 25, 0.96), rgba(24, 7, 11, 0.98));
+      }
+
+      .probechip-warn {
+        border-color: rgba(255, 191, 95, 0.22);
+        background: linear-gradient(180deg, rgba(70, 47, 12, 0.96), rgba(28, 20, 7, 0.98));
+      }
+
+      .probechip-info {
+        border-color: rgba(98, 214, 255, 0.22);
+        background: linear-gradient(180deg, rgba(10, 32, 48, 0.96), rgba(8, 17, 27, 0.98));
+      }
+
+      .probe-label {
+        display: block;
+        margin: 0 0 4px;
+        color: #9eb0c8;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .probe-state {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 700;
+        color: #f4f8ff;
+      }
+
+      .probe-note {
+        display: block;
+        margin: 4px 0 0;
+        color: rgba(234, 242, 255, 0.7);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      @keyframes floatIn {
+        0% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        100% {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .topbar,
+      .statusbar,
+      .panel,
+      .probepanel {
+        animation: floatIn 0.5s ease both;
+      }
+
+      table.headlayout tr td.headleft .topbar {
+        animation-delay: 0.04s;
+      }
+
+      table.headlayout tr td.headright .statusbar {
+        animation-delay: 0.08s;
+      }
+
+      table.layout .col-browser .panel {
+        animation-delay: 0.12s;
+      }
+
+      table.layout .col-screen .panel {
+        animation-delay: 0.16s;
+      }
+
+      table.layout .col-runtime .panel {
+        animation-delay: 0.20s;
+      }
+
+      table.layout .col-compatibility .panel {
+        animation-delay: 0.24s;
+      }
+
+      .probepanel {
+        animation-delay: 0.28s;
       }
 
       @media (max-width: 900px) {
         body {
-          padding: 4px;
+          padding: 6px;
         }
 
+        table.headlayout,
         table.layout {
-          border-spacing: 4px;
+          border-spacing: 6px;
+        }
+
+        td.headleft,
+        td.headright,
+        td.col {
+          width: 100%;
+        }
+
+        table.headlayout tr,
+        table.layout tr,
+        table.headlayout td,
+        table.layout td {
+          display: block;
+        }
+
+        table.layout tr {
+          margin-bottom: 8px;
         }
 
         h1 {
-          font-size: 20px;
+          font-size: 22px;
+        }
+
+        .subtitle {
+          font-size: 12px;
+        }
+
+        .probechip {
+          width: 49%;
+          min-width: 0;
+          margin-right: 2%;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .probechip {
+          width: 100%;
+          margin-right: 0;
+        }
+
+        .statusitem,
+        .erroritem {
+          width: 100%;
+          min-width: 0;
+          margin-right: 0;
+        }
+
+        .screenid-inline {
+          display: block;
+          margin: 8px 0 0;
+        }
+
+        .controls {
+          margin-top: 10px;
         }
       }
     </style>
@@ -228,18 +538,18 @@
     <div class="wrap">
       <table class="headlayout" cellspacing="0" cellpadding="0">
         <tr>
-          <td class="headleft">
+          <td class="headleft hero-left">
             <div class="topbar">
               <div class="eyebrow">Browser telemetry</div>
               <h1>Datos visibles <span id="screenIdValue" class="screenid-inline">...</span></h1>
+              <div class="subtitle">Telemetry dashboard for Tizen-safe diagnostics and live browser state.</div>
 
               <div class="controls">
                 <button id="refreshBtn" type="button">Actualizar</button>
-              </div>  
-              
+              </div>
             </div>
           </td>
-          <td class="headright">
+          <td class="headright hero-right">
             <div class="summaryblock statusbar">
               <h2>Estado y errores</h2>
               <div id="statusData" class="statusline"></div>
@@ -252,33 +562,41 @@
 
       <table class="layout" cellspacing="0" cellpadding="0">
         <tr>
-          <td class="col">
+          <td class="col col-browser">
             <div class="panel">
               <h2>Browser</h2>
               <div id="browserData"></div>
             </div>
           </td>
-          <td class="col">
+          <td class="col col-screen">
             <div class="panel">
               <h2>Screen</h2>
               <div id="screenData"></div>
             </div>
           </td>
-          <td class="col">
+          <td class="col col-runtime">
             <div class="panel">
               <h2>Runtime</h2>
               <div id="runtimeData"></div>
             </div>
           </td>
-          <td class="col">
+          <td class="col col-compatibility">
             <div class="panel">
-              <h2>Compatibilidad</h2>
-              <div id="compatibilityData"></div>
-            </div>
-          </td>
+               <h2>Compatibilidad y stack</h2>
+               <div id="compatibilityData"></div>
+             </div>
+           </td>
         </tr>
       </table>
-    </div>
+
+      <div class="panel probepanel">
+        <h2>Browser lab</h2>
+         <div class="probenote">
+           Pruebas en vivo. Cada chip va aislado para que un fallo no frene el panel. Verde = soportado, ámbar = parcial o legado, rojo = no soportado.
+         </div>
+         <div id="probeData" class="probecloud"></div>
+       </div>
+     </div>
 
     <script>
       (function () {
@@ -289,13 +607,15 @@
         var screenIdValueEl = document.getElementById("screenIdValue");
         var statusDataEl = document.getElementById("statusData");
         var errorDataEl = document.getElementById("errorData");
+        var probeDataEl = document.getElementById("probeData");
         var refreshBtn = document.getElementById("refreshBtn");
-        var buildVersion = "top-top-2026.04.15";
+        var buildVersion = "top-top-lab-2026.04.15";
 
         var state = {
           status: "Listo",
           lastRefresh: "Nunca",
-          errors: []
+          errors: [],
+          probeSummary: "0/0"
         };
 
         function escapeHtml(value) {
@@ -333,8 +653,10 @@
           return message;
         }
 
-        function row(label, value) {
-          return '<div class="row"><div class="key">' + escapeHtml(label) + '</div><div class="value">' + escapeHtml(value) + '</div></div>';
+        function row(label, value, note) {
+          return '<div class="row"><div class="key">' + escapeHtml(label) + '</div><div class="value">' + escapeHtml(value) + '</div>' +
+            (note ? '<div class="small">' + escapeHtml(note) + '</div>' : '') +
+            '</div>';
         }
 
         function chip(label, value, kind) {
@@ -347,7 +669,7 @@
           var i;
 
           for (i = 0; i < rows.length; i += 1) {
-            html += row(rows[i][0], rows[i][1]);
+            html += row(rows[i][0], rows[i][1], rows[i][2]);
           }
 
           target.innerHTML = html;
@@ -371,6 +693,7 @@
             chip("Estado", state.status) +
             chip("Refresh", state.lastRefresh) +
             chip("Errores", String(state.errors.length)) +
+            chip("Probes", state.probeSummary) +
             chip("Build", buildVersion) +
             chip("JS", probeModernSyntax());
         }
@@ -469,6 +792,210 @@
           }
         }
 
+        function probeSyntax(source) {
+          try {
+            new Function(source);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        }
+
+        function supportsCssFeature(propertyName, value) {
+          try {
+            if (!window.CSS || !window.CSS.supports) {
+              return false;
+            }
+
+            return window.CSS.supports(propertyName, value);
+          } catch (error) {
+            return false;
+          }
+        }
+
+        function probeChip(item) {
+          var cls = "probechip-" + (item.kind || "info");
+
+          return '<span class="probechip ' + cls + '">' +
+            '<span class="probe-label">' + escapeHtml(item.label) + '</span>' +
+            '<span class="probe-state">' + escapeHtml(item.state) + '</span>' +
+            (item.note ? '<span class="probe-note">' + escapeHtml(item.note) + '</span>' : '') +
+            '</span>';
+        }
+
+        function renderProbeCloud(target, items) {
+          var html = "";
+          var i;
+
+          if (!items || !items.length) {
+            target.innerHTML = '<div class="small">No hay probes disponibles.</div>';
+            return;
+          }
+
+          for (i = 0; i < items.length; i += 1) {
+            html += probeChip(items[i]);
+          }
+
+          target.innerHTML = html;
+        }
+
+        function buildProbeItems() {
+          var items = [];
+          var supported = 0;
+          var total = 0;
+          var syntaxEs5 = probeSyntax("var a = 1; return a;");
+          var syntaxEs6 = probeSyntax("const a = 1; let b = 2; return a + b;");
+          var syntaxArrow = probeSyntax("var run = () => 1; return run();");
+          var syntaxTemplate = probeSyntax("var name = 'lab'; return `view-${name}`;");
+          var syntaxDestructuring = probeSyntax("var obj = { a: 1 }; var { a } = obj; return a;");
+          var syntaxClass = probeSyntax("class Lab { constructor() { this.ok = true; } } return new Lab().ok;");
+          var syntaxSpread = probeSyntax("var src = [1, 2]; return [...src].length;");
+          var syntaxOptional = probeSyntax("var obj = {}; return obj?.value;");
+          var syntaxNullish = probeSyntax("var value = null; return value ?? 1;");
+          var hasPromise = !!window.Promise;
+          var hasMapSet = !!(window.Map && window.Set);
+          var hasWeakMapSet = !!(window.WeakMap && window.WeakSet);
+          var hasSymbol = !!window.Symbol;
+          var hasBigInt = !!window.BigInt;
+          var hasIntl = !!window.Intl;
+          var hasUrl = !!(window.URL && window.URLSearchParams);
+          var hasTextEncoder = !!window.TextEncoder;
+          var hasTextDecoder = !!window.TextDecoder;
+          var hasRaf = !!window.requestAnimationFrame;
+          var hasPerfNow = !!(window.performance && window.performance.now);
+          var hasCryptoRandom = !!(window.crypto && window.crypto.getRandomValues);
+          var hasCryptoUuid = !!(window.crypto && window.crypto.randomUUID);
+          var hasFetch = !!window.fetch;
+          var hasWebSocket = !!window.WebSocket;
+          var hasEventSource = !!window.EventSource;
+          var hasWebAssembly = !!window.WebAssembly;
+          var hasMutationObserver = !!window.MutationObserver;
+          var hasResizeObserver = !!window.ResizeObserver;
+          var hasIntersectionObserver = !!window.IntersectionObserver;
+          var hasLocalStorage = false;
+          var hasSessionStorage = false;
+          var hasIndexedDB = !!window.indexedDB;
+          var hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+          var hasClipboard = !!navigator.clipboard;
+          var hasFullscreen = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+          var hasPictureInPicture = !!document.pictureInPictureEnabled;
+          var hasCanvas2d = false;
+          var hasWebGL = false;
+          var hasOffscreenCanvas = !!window.OffscreenCanvas;
+          var hasServiceWorker = !!navigator.serviceWorker;
+          var hasBroadcastChannel = !!window.BroadcastChannel;
+          var hasNotifications = !!window.Notification;
+          var hasScreenOrientation = !!(window.screen && window.screen.orientation && window.screen.orientation.type);
+          var hasDeviceMotion = !!window.DeviceMotionEvent;
+          var hasDeviceOrientation = !!window.DeviceOrientationEvent;
+          var hasGrid = supportsCssFeature("display", "grid");
+          var hasFlex = supportsCssFeature("display", "flex");
+          var hasSticky = supportsCssFeature("position", "sticky");
+          var hasBackdrop = supportsCssFeature("backdrop-filter", "blur(6px)") || supportsCssFeature("-webkit-backdrop-filter", "blur(6px)");
+          var hasAspectRatio = supportsCssFeature("aspect-ratio", "1 / 1");
+          var hasCssVars = supportsCssFeature("color", "var(--probe)");
+          var canvas;
+
+          try {
+            hasLocalStorage = !!window.localStorage;
+          } catch (error) {
+            hasLocalStorage = false;
+          }
+
+          try {
+            hasSessionStorage = !!window.sessionStorage;
+          } catch (error) {
+            hasSessionStorage = false;
+          }
+
+          try {
+            canvas = document.createElement("canvas");
+
+            if (canvas && canvas.getContext) {
+              hasCanvas2d = !!canvas.getContext("2d");
+              hasWebGL = !!(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"));
+            }
+          } catch (error) {
+            hasCanvas2d = false;
+            hasWebGL = false;
+          }
+
+          function add(label, pass, note, kind, stateText, countInSummary) {
+            items[items.length] = {
+              label: label,
+              state: stateText || (pass ? "OK" : "No"),
+              note: note || "",
+              kind: kind || (pass ? "ok" : "fail")
+            };
+
+            if (countInSummary !== false) {
+              total += 1;
+
+              if (pass) {
+                supported += 1;
+              }
+            }
+          }
+
+          add("Syntax · ES5", syntaxEs5, "Funciona el parser base del browser.", syntaxEs5 ? "ok" : "fail", syntaxEs5 ? "OK" : "No");
+          add("Syntax · ES6", syntaxEs6, "const / let / parámetros modernos.", syntaxEs6 ? "ok" : "fail", syntaxEs6 ? "OK" : "No");
+          add("Syntax · Arrow", syntaxArrow, "Funciones flecha.", syntaxArrow ? "ok" : "fail", syntaxArrow ? "OK" : "No");
+          add("Syntax · Template", syntaxTemplate, "Template literals.", syntaxTemplate ? "ok" : "fail", syntaxTemplate ? "OK" : "No");
+          add("Syntax · Destructuring", syntaxDestructuring, "Asignación por destructuring.", syntaxDestructuring ? "ok" : "fail", syntaxDestructuring ? "OK" : "No");
+          add("Syntax · Class", syntaxClass, "Clases y constructor.", syntaxClass ? "ok" : "fail", syntaxClass ? "OK" : "No");
+          add("Syntax · Spread", syntaxSpread, "Spread operator.", syntaxSpread ? "ok" : "fail", syntaxSpread ? "OK" : "No");
+          add("Syntax · Optional chaining", syntaxOptional, "ES2020, acceso seguro.", syntaxOptional ? "warn" : "fail", syntaxOptional ? "Parcial" : "No");
+          add("Syntax · Nullish coalescing", syntaxNullish, "ES2020, fallback preciso.", syntaxNullish ? "warn" : "fail", syntaxNullish ? "Parcial" : "No");
+          add("JS · Promise", hasPromise, "Primitiva async.", hasPromise ? "ok" : "fail", hasPromise ? "OK" : "No");
+          add("JS · Map / Set", hasMapSet, "Colecciones modernas.", hasMapSet ? "ok" : "fail", hasMapSet ? "OK" : "No");
+          add("JS · WeakMap / WeakSet", hasWeakMapSet, "Colecciones débiles.", hasWeakMapSet ? "ok" : "fail", hasWeakMapSet ? "OK" : "No");
+          add("JS · Symbol", hasSymbol, "Identificadores únicos.", hasSymbol ? "ok" : "fail", hasSymbol ? "OK" : "No");
+          add("JS · BigInt", hasBigInt, "Enteros grandes.", hasBigInt ? "warn" : "fail", hasBigInt ? "Condicional" : "No");
+          add("JS · Intl", hasIntl, "Formateo regional.", hasIntl ? "ok" : "fail", hasIntl ? "OK" : "No");
+          add("JS · URL", hasUrl, "URL y URLSearchParams.", hasUrl ? "ok" : "fail", hasUrl ? "OK" : "No");
+          add("JS · TextEncoder", hasTextEncoder, "Codificación de texto.", hasTextEncoder ? "ok" : "fail", hasTextEncoder ? "OK" : "No");
+          add("JS · TextDecoder", hasTextDecoder, "Decodificación de texto.", hasTextDecoder ? "ok" : "fail", hasTextDecoder ? "OK" : "No");
+          add("JS · requestAnimationFrame", hasRaf, "Animación sincronizada.", hasRaf ? "ok" : "fail", hasRaf ? "OK" : "No");
+          add("JS · performance.now", hasPerfNow, "Reloj de alta precisión.", hasPerfNow ? "ok" : "fail", hasPerfNow ? "OK" : "No");
+          add("JS · crypto.getRandomValues", hasCryptoRandom, "Criptografía básica.", hasCryptoRandom ? "ok" : "fail", hasCryptoRandom ? "OK" : "No");
+          add("JS · crypto.randomUUID", hasCryptoUuid, "UUID nativo.", hasCryptoUuid ? "warn" : "fail", hasCryptoUuid ? "Condicional" : "No");
+          add("Net · fetch", hasFetch, "Fetch API.", hasFetch ? "ok" : "fail", hasFetch ? "OK" : "No");
+          add("Net · WebSocket", hasWebSocket, "Conexiones en tiempo real.", hasWebSocket ? "ok" : "fail", hasWebSocket ? "OK" : "No");
+          add("Net · EventSource", hasEventSource, "Server-Sent Events.", hasEventSource ? "warn" : "fail", hasEventSource ? "Condicional" : "No");
+          add("Net · WebAssembly", hasWebAssembly, "Binarios web.", hasWebAssembly ? "ok" : "fail", hasWebAssembly ? "OK" : "No");
+          add("DOM · MutationObserver", hasMutationObserver, "Observa cambios DOM.", hasMutationObserver ? "ok" : "fail", hasMutationObserver ? "OK" : "No");
+          add("DOM · ResizeObserver", hasResizeObserver, "Observa tamaño.", hasResizeObserver ? "warn" : "fail", hasResizeObserver ? "Condicional" : "No");
+          add("DOM · IntersectionObserver", hasIntersectionObserver, "Visibilidad en viewport.", hasIntersectionObserver ? "warn" : "fail", hasIntersectionObserver ? "Condicional" : "No");
+          add("Storage · localStorage", hasLocalStorage, "Persistencia simple.", hasLocalStorage ? "ok" : "fail", hasLocalStorage ? "OK" : "No");
+          add("Storage · sessionStorage", hasSessionStorage, "Persistencia de sesión.", hasSessionStorage ? "ok" : "fail", hasSessionStorage ? "OK" : "No");
+          add("Storage · IndexedDB", hasIndexedDB, "Base de datos local.", hasIndexedDB ? "ok" : "fail", hasIndexedDB ? "OK" : "No");
+          add("Media · getUserMedia", hasMediaDevices, "Cámara / micrófono.", hasMediaDevices ? "warn" : "fail", hasMediaDevices ? "Condicional" : "No");
+          add("Media · Clipboard", hasClipboard, "Clipboard async.", hasClipboard ? "warn" : "fail", hasClipboard ? "Condicional" : "No");
+          add("Media · Fullscreen", hasFullscreen, "Pantalla completa.", hasFullscreen ? "warn" : "fail", hasFullscreen ? "Condicional" : "No");
+          add("Media · Picture-in-Picture", hasPictureInPicture, "Mini ventana de video.", hasPictureInPicture ? "warn" : "fail", hasPictureInPicture ? "Condicional" : "No");
+          add("Graphics · Canvas 2D", hasCanvas2d, "Dibujo básico.", hasCanvas2d ? "ok" : "fail", hasCanvas2d ? "OK" : "No");
+          add("Graphics · WebGL", hasWebGL, "Aceleración 3D.", hasWebGL ? "warn" : "fail", hasWebGL ? "Condicional" : "No");
+          add("Graphics · OffscreenCanvas", hasOffscreenCanvas, "Canvas fuera del hilo principal.", hasOffscreenCanvas ? "warn" : "fail", hasOffscreenCanvas ? "Condicional" : "No");
+          add("CSS · Grid", hasGrid, "Layout grid moderno.", hasGrid ? "ok" : "fail", hasGrid ? "OK" : "No");
+          add("CSS · Flex", hasFlex, "Layout flexible.", hasFlex ? "ok" : "fail", hasFlex ? "OK" : "No");
+          add("CSS · Sticky", hasSticky, "Posicionamiento sticky.", hasSticky ? "ok" : "fail", hasSticky ? "OK" : "No");
+          add("CSS · backdrop-filter", hasBackdrop, "Efecto vidrio.", hasBackdrop ? "warn" : "fail", hasBackdrop ? "Condicional" : "No");
+          add("CSS · aspect-ratio", hasAspectRatio, "Relación de aspecto.", hasAspectRatio ? "warn" : "fail", hasAspectRatio ? "Condicional" : "No");
+          add("CSS · custom properties", hasCssVars, "Variables CSS.", hasCssVars ? "ok" : "fail", hasCssVars ? "OK" : "No");
+          add("Platform · Screen Orientation", hasScreenOrientation, "Orientation API.", hasScreenOrientation ? "warn" : "fail", hasScreenOrientation ? "Condicional" : "No");
+          add("Platform · DeviceMotion", hasDeviceMotion, "Sensores de movimiento.", hasDeviceMotion ? "warn" : "fail", hasDeviceMotion ? "Condicional" : "No");
+          add("Platform · DeviceOrientation", hasDeviceOrientation, "Sensores de orientación.", hasDeviceOrientation ? "warn" : "fail", hasDeviceOrientation ? "Condicional" : "No");
+          add("Platform · Service Worker", hasServiceWorker, "Caché offline / PWA.", hasServiceWorker ? "warn" : "fail", hasServiceWorker ? "Condicional" : "No");
+          add("Platform · Notifications", hasNotifications, "Notificaciones web.", hasNotifications ? "warn" : "fail", hasNotifications ? "Condicional" : "No");
+          add("Platform · BroadcastChannel", hasBroadcastChannel, "Comunicación entre tabs.", hasBroadcastChannel ? "warn" : "fail", hasBroadcastChannel ? "Condicional" : "No");
+
+          return {
+            items: items,
+            supported: supported,
+            total: total
+          };
+        }
+
         function safeRender(sectionName, target, builder) {
           try {
             renderRows(target, builder());
@@ -526,6 +1053,34 @@
         }
 
         function buildCompatibilityRows() {
+          var es5 = probeSyntax("var a = 1; return a;");
+          var es6 = probeSyntax("const a = 1; let b = 2; return a + b;");
+          var hasPromise = !!window.Promise;
+          var hasMapSet = !!(window.Map && window.Set);
+          var hasSymbol = !!window.Symbol;
+          var hasFetch = !!window.fetch;
+          var hasIntl = !!window.Intl;
+          var hasMutationObserver = !!window.MutationObserver;
+          var hasIndexedDB = !!window.indexedDB;
+          var hasLocalStorage = false;
+          var hasCssGrid = supportsCssFeature("display", "grid");
+          var hasCssFlex = supportsCssFeature("display", "flex");
+          var modernCore;
+          var jqueryLike;
+          var spaReady;
+          var angularLike;
+
+          try {
+            hasLocalStorage = !!window.localStorage;
+          } catch (error) {
+            hasLocalStorage = false;
+          }
+
+          modernCore = es6 && hasPromise && hasMapSet && hasSymbol && hasFetch && hasIntl;
+          jqueryLike = es5 && !!document.querySelector && !!window.addEventListener;
+          spaReady = modernCore && hasMutationObserver && hasIndexedDB && hasLocalStorage;
+          angularLike = modernCore && hasMutationObserver && hasIndexedDB && hasLocalStorage && hasCssGrid && hasCssFlex;
+
           return [
             ["localStorage", (function () {
               try {
@@ -536,12 +1091,17 @@
             }())],
             ["permissionsApi", hasPermissionsApi() ? "true" : "false"],
             ["networkInformationApi", hasNetworkInformationApi() ? "true" : "false"],
-            ["screenOrientation", window.screen && window.screen.orientation && window.screen.orientation.type ? "true" : "false"]
+            ["screenOrientation", window.screen && window.screen.orientation && window.screen.orientation.type ? "true" : "false"],
+            ["Stack · ES5 baseline", es5 ? "Sí" : "No", "Base mínima para browsers viejos"],
+            ["Stack · jQuery / legacy DOM", jqueryLike ? "Probable" : "Riesgo", "ES5 + DOM clásico + eventos"],
+            ["Stack · SPA transpiled", spaReady ? "Probable" : "Riesgo", "ES2015+ + Promise + storage + observers"],
+            ["Stack · Angular 20 (heurística)", angularLike ? "Probable" : "Riesgo alto", "Heurística; Angular CLI transpila, pero no polyfill APIs faltantes"]
           ];
         }
 
         function refreshView() {
           var screenId = getScreenId();
+          var probeResult;
 
           state.status = "Leyendo";
           renderMeta();
@@ -563,6 +1123,19 @@
           safeRender("Compatibilidad", compatibilityDataEl, function () {
             return buildCompatibilityRows();
           });
+
+          try {
+            probeResult = buildProbeItems();
+            state.probeSummary = probeResult.supported + "/" + probeResult.total + " ok";
+            renderProbeCloud(probeDataEl, probeResult.items);
+          } catch (error) {
+            state.probeSummary = "0/0";
+            pushError("Browser lab", error);
+
+            if (probeDataEl) {
+              probeDataEl.innerHTML = '<div class="row errorrow"><div class="key">Browser lab</div><div class="value">Error: ' + escapeHtml(describeError(error)) + '</div></div>';
+            }
+          }
 
           state.status = "Listo";
           state.lastRefresh = new Date().toString();
