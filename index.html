@@ -5,42 +5,346 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ViewScreenData</title>
     <meta name="description" content="Vista simple para inspeccionar datos del navegador." />
-    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #08111d;
+        color: #e5eefc;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        padding: 8px;
+      }
+
+      .wrap {
+        width: 100%;
+      }
+
+      .topbar {
+        margin-bottom: 8px;
+      }
+
+      .eyebrow {
+        margin: 0 0 3px;
+        color: #7dd3fc;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.1;
+      }
+
+      .controls {
+        margin-top: 8px;
+      }
+
+      button {
+        border: 1px solid #33506b;
+        background: #102033;
+        color: #e5eefc;
+        padding: 8px 12px;
+        margin-right: 6px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .idbar,
+      .panel {
+        border: 1px solid #24384d;
+        background: #0d1827;
+        padding: 10px;
+      }
+
+      .idbar {
+        margin-bottom: 8px;
+      }
+
+      .idvalue {
+        display: block;
+        font-size: 16px;
+        font-weight: 700;
+        word-break: break-all;
+      }
+
+      .idnote {
+        display: block;
+        margin-top: 4px;
+        color: #9eb0c8;
+        font-size: 11px;
+      }
+
+      table.layout {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 8px;
+        table-layout: fixed;
+      }
+
+      td.col {
+        width: 25%;
+        vertical-align: top;
+      }
+
+      .panel h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .row {
+        border: 1px solid #223449;
+        background: #0a1421;
+        padding: 6px 8px;
+        margin-bottom: 6px;
+      }
+
+      .key {
+        margin: 0;
+        color: #9eb0c8;
+        font-size: 11px;
+      }
+
+      .value {
+        margin: 2px 0 0;
+        font-size: 13px;
+        word-break: break-word;
+      }
+
+      .small {
+        color: #9eb0c8;
+        font-size: 11px;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 4px;
+        }
+
+        table.layout {
+          border-spacing: 4px;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <main class="shell">
+    <div class="wrap">
       <div class="topbar">
-        <div>
-          <div class="eyebrow">Browser telemetry</div>
-          <h1>Datos visibles</h1>
-        </div>
-        <div class="actions">
+        <div class="eyebrow">Browser telemetry</div>
+        <h1>Datos visibles</h1>
+        <div class="controls">
           <button id="refreshBtn" type="button">Actualizar</button>
         </div>
       </div>
 
-      <section class="panel idbar">
-        <h2>Screen ID</h2>
+      <div class="idbar">
+        <div class="key">Screen ID</div>
         <div id="screenIdValue" class="idvalue">...</div>
-        <div class="idnote">Id generado por la app y guardado en este navegador.</div>
-      </section>
+        <div class="idnote">Id calculado a partir del navegador y la pantalla.</div>
+      </div>
 
-      <section class="panel">
-        <h2>Browser</h2>
-        <div id="browserData" class="content"></div>
-      </section>
+      <table class="layout" cellspacing="0" cellpadding="0">
+        <tr>
+          <td class="col">
+            <div class="panel">
+              <h2>Browser</h2>
+              <div id="browserData"></div>
+            </div>
+          </td>
+          <td class="col">
+            <div class="panel">
+              <h2>Screen</h2>
+              <div id="screenData"></div>
+            </div>
+          </td>
+          <td class="col">
+            <div class="panel">
+              <h2>Runtime</h2>
+              <div id="runtimeData"></div>
+            </div>
+          </td>
+          <td class="col">
+            <div class="panel">
+              <h2>Compatibilidad</h2>
+              <div id="compatibilityData"></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
 
-      <section class="panel">
-        <h2>Screen</h2>
-        <div id="screenData" class="content"></div>
-      </section>
+    <script>
+      (function () {
+        var browserDataEl = document.getElementById("browserData");
+        var screenDataEl = document.getElementById("screenData");
+        var runtimeDataEl = document.getElementById("runtimeData");
+        var compatibilityDataEl = document.getElementById("compatibilityData");
+        var screenIdValueEl = document.getElementById("screenIdValue");
+        var refreshBtn = document.getElementById("refreshBtn");
 
-      <section class="panel">
-        <h2>Compatibilidad</h2>
-        <div id="compatibilityData" class="content"></div>
-      </section>
-    </main>
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
 
-    <script src="./app.js"></script>
+        function row(label, value) {
+          return (
+            '<div class="row"><div class="key">' +
+            escapeHtml(label) +
+            "</div><div class=\"value\">" +
+            escapeHtml(value) +
+            "</div></div>"
+          );
+        }
+
+        function renderRows(target, rows) {
+          var html = "";
+          var i;
+
+          for (i = 0; i < rows.length; i += 1) {
+            html += row(rows[i][0], rows[i][1]);
+          }
+
+          target.innerHTML = html;
+        }
+
+        function hashString(input) {
+          var hash = 0;
+          var i;
+
+          for (i = 0; i < input.length; i += 1) {
+            hash = ((hash << 5) - hash) + input.charCodeAt(i);
+            hash |= 0;
+          }
+
+          return "sid-" + (hash >>> 0).toString(16);
+        }
+
+        function getScreenId() {
+          var screen = window.screen || {};
+          var parts = [
+            navigator.userAgent || "",
+            navigator.platform || "",
+            navigator.language || "",
+            screen.width || 0,
+            screen.height || 0,
+            screen.availWidth || 0,
+            screen.availHeight || 0,
+            screen.colorDepth || 0,
+            window.devicePixelRatio || 1
+          ];
+
+          return hashString(parts.join("|"));
+        }
+
+        function getConnectionValue(key) {
+          var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+          if (!connection) {
+            return "No disponible";
+          }
+
+          return connection[key] !== undefined && connection[key] !== null ? connection[key] : "No disponible";
+        }
+
+        function hasPermissionsApi() {
+          try {
+            return !!(navigator.permissions && navigator.permissions.query);
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function hasNetworkInformationApi() {
+          try {
+            return !!(navigator.connection || navigator.mozConnection || navigator.webkitConnection);
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function refreshView() {
+          var screen = window.screen || {};
+          var screenId = getScreenId();
+
+          screenIdValueEl.innerHTML = escapeHtml(screenId);
+
+          renderRows(browserDataEl, [
+            ["userAgent", navigator.userAgent || "No disponible"],
+            ["platform", navigator.platform || "No disponible"],
+            ["language", navigator.language || "No disponible"],
+            ["cookies", navigator.cookieEnabled ? "true" : "false"],
+            ["online", navigator.onLine ? "true" : "false"],
+            ["hardwareConcurrency", navigator.hardwareConcurrency || "No disponible"],
+            ["deviceMemory", navigator.deviceMemory !== undefined ? navigator.deviceMemory : "No disponible"],
+            ["maxTouchPoints", navigator.maxTouchPoints !== undefined ? navigator.maxTouchPoints : "0"],
+            ["referrer", document.referrer || "Ninguno"]
+          ]);
+
+          renderRows(screenDataEl, [
+            ["width", screen.width || "No disponible"],
+            ["height", screen.height || "No disponible"],
+            ["availWidth", screen.availWidth || "No disponible"],
+            ["availHeight", screen.availHeight || "No disponible"],
+            ["colorDepth", screen.colorDepth || "No disponible"],
+            ["pixelDepth", screen.pixelDepth || "No disponible"],
+            ["pixelRatio", window.devicePixelRatio || "No disponible"],
+            ["innerWidth", window.innerWidth || "No disponible"],
+            ["innerHeight", window.innerHeight || "No disponible"]
+          ]);
+
+          renderRows(runtimeDataEl, [
+            ["screenId", screenId],
+            ["tizenRuntime", window.tizen || /Tizen/i.test(navigator.userAgent || "") ? "true" : "false"],
+            ["timeZone", window.Intl && Intl.DateTimeFormat ? (function () {
+              try {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
+              } catch (e) {
+                return "No disponible";
+              }
+            }()) : "No disponible"],
+            ["connectionType", getConnectionValue("type")],
+            ["effectiveType", getConnectionValue("effectiveType")],
+            ["downlink", getConnectionValue("downlink")],
+            ["rtt", getConnectionValue("rtt")],
+            ["saveData", getConnectionValue("saveData")]
+          ]);
+
+          renderRows(compatibilityDataEl, [
+            ["localStorage", (function () {
+              try {
+                return window.localStorage ? "true" : "false";
+              } catch (e) {
+                return "false";
+              }
+            }())],
+            ["permissionsApi", hasPermissionsApi() ? "true" : "false"],
+            ["networkInformationApi", hasNetworkInformationApi() ? "true" : "false"],
+            ["screenOrientation", screen.orientation && screen.orientation.type ? "true" : "false"]
+          ]);
+        }
+
+        refreshBtn.onclick = refreshView;
+        refreshView();
+      }());
+    </script>
   </body>
 </html>
