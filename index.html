@@ -61,14 +61,27 @@
       }
 
       .idbar,
-      .panel {
+      .panel,
+      .statusbar {
         border: 1px solid #24384d;
         background: #0d1827;
         padding: 10px;
       }
 
-      .idbar {
+      .idbar,
+      .statusbar {
         margin-bottom: 8px;
+      }
+
+      .statusbar h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .statusmeta {
+        margin: 0 0 6px;
+        color: #9eb0c8;
+        font-size: 11px;
       }
 
       .idvalue {
@@ -126,6 +139,11 @@
         font-size: 11px;
       }
 
+      .errorrow {
+        border-color: #6b2c2c;
+        background: #1a0c0c;
+      }
+
       @media (max-width: 900px) {
         body {
           padding: 4px;
@@ -155,6 +173,13 @@
         <div class="key">Screen ID</div>
         <div id="screenIdValue" class="idvalue">...</div>
         <div class="idnote">Id calculado a partir del navegador y la pantalla.</div>
+      </div>
+
+      <div class="statusbar">
+        <h2>Estado y errores</h2>
+        <div id="statusData"></div>
+        <div class="statusmeta">Si una funcion falla, aparece aqui sin detener el resto de la pagina.</div>
+        <div id="errorData"></div>
       </div>
 
       <table class="layout" cellspacing="0" cellpadding="0">
@@ -194,7 +219,15 @@
         var runtimeDataEl = document.getElementById("runtimeData");
         var compatibilityDataEl = document.getElementById("compatibilityData");
         var screenIdValueEl = document.getElementById("screenIdValue");
+        var statusDataEl = document.getElementById("statusData");
+        var errorDataEl = document.getElementById("errorData");
         var refreshBtn = document.getElementById("refreshBtn");
+
+        var state = {
+          status: "Listo",
+          lastRefresh: "Nunca",
+          errors: []
+        };
 
         function escapeHtml(value) {
           return String(value)
@@ -205,14 +238,34 @@
             .replace(/'/g, "&#39;");
         }
 
+        function describeError(error) {
+          var message = "Error desconocido";
+
+          if (!error) {
+            return message;
+          }
+
+          if (typeof error === "string") {
+            return error;
+          }
+
+          if (error.message) {
+            message = error.message;
+          } else {
+            try {
+              message = String(error);
+            } catch (e) {}
+          }
+
+          if (error.stack) {
+            message += " | " + error.stack;
+          }
+
+          return message;
+        }
+
         function row(label, value) {
-          return (
-            '<div class="row"><div class="key">' +
-            escapeHtml(label) +
-            "</div><div class=\"value\">" +
-            escapeHtml(value) +
-            "</div></div>"
-          );
+          return '<div class="row"><div class="key">' + escapeHtml(label) + '</div><div class="value">' + escapeHtml(value) + '</div></div>';
         }
 
         function renderRows(target, rows) {
@@ -224,6 +277,42 @@
           }
 
           target.innerHTML = html;
+        }
+
+        function pushError(scope, error) {
+          var entries = state.errors;
+
+          entries[entries.length] = [scope, describeError(error)];
+
+          if (entries.length > 6) {
+            entries.shift();
+          }
+
+          renderMeta();
+          renderErrorLog();
+        }
+
+        function renderMeta() {
+          statusDataEl.innerHTML =
+            row("Estado", state.status) +
+            row("Ultimo refresh", state.lastRefresh) +
+            row("Errores", String(state.errors.length));
+        }
+
+        function renderErrorLog() {
+          var html = "";
+          var i;
+
+          if (!state.errors.length) {
+            errorDataEl.innerHTML = '<div class="small">Sin errores detectados</div>';
+            return;
+          }
+
+          for (i = 0; i < state.errors.length; i += 1) {
+            html += row(state.errors[i][0], state.errors[i][1]).replace('class="row"', 'class="row errorrow"');
+          }
+
+          errorDataEl.innerHTML = html;
         }
 
         function hashString(input) {
@@ -255,6 +344,16 @@
           return hashString(parts.join("|"));
         }
 
+        function getTimeZone() {
+          try {
+            if (window.Intl && Intl.DateTimeFormat) {
+              return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
+            }
+          } catch (error) {}
+
+          return "No disponible";
+        }
+
         function getConnectionValue(key) {
           var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 
@@ -262,13 +361,17 @@
             return "No disponible";
           }
 
-          return connection[key] !== undefined && connection[key] !== null ? connection[key] : "No disponible";
+          try {
+            return connection[key] !== undefined && connection[key] !== null ? connection[key] : "No disponible";
+          } catch (error) {
+            return "No disponible";
+          }
         }
 
         function hasPermissionsApi() {
           try {
             return !!(navigator.permissions && navigator.permissions.query);
-          } catch (e) {
+          } catch (error) {
             return false;
           }
         }
@@ -276,18 +379,23 @@
         function hasNetworkInformationApi() {
           try {
             return !!(navigator.connection || navigator.mozConnection || navigator.webkitConnection);
-          } catch (e) {
+          } catch (error) {
             return false;
           }
         }
 
-        function refreshView() {
-          var screen = window.screen || {};
-          var screenId = getScreenId();
+        function safeRender(sectionName, target, builder) {
+          try {
+            renderRows(target, builder());
+          } catch (error) {
+            pushError(sectionName, error);
+            renderRows(target, [["Error", describeError(error)]]);
+          }
+        }
 
-          screenIdValueEl.innerHTML = escapeHtml(screenId);
-
-          renderRows(browserDataEl, [
+        function buildBrowserRows(screenId) {
+          return [
+            ["screenId", screenId],
             ["userAgent", navigator.userAgent || "No disponible"],
             ["platform", navigator.platform || "No disponible"],
             ["language", navigator.language || "No disponible"],
@@ -297,9 +405,13 @@
             ["deviceMemory", navigator.deviceMemory !== undefined ? navigator.deviceMemory : "No disponible"],
             ["maxTouchPoints", navigator.maxTouchPoints !== undefined ? navigator.maxTouchPoints : "0"],
             ["referrer", document.referrer || "Ninguno"]
-          ]);
+          ];
+        }
 
-          renderRows(screenDataEl, [
+        function buildScreenRows() {
+          var screen = window.screen || {};
+
+          return [
             ["width", screen.width || "No disponible"],
             ["height", screen.height || "No disponible"],
             ["availWidth", screen.availWidth || "No disponible"],
@@ -309,41 +421,118 @@
             ["pixelRatio", window.devicePixelRatio || "No disponible"],
             ["innerWidth", window.innerWidth || "No disponible"],
             ["innerHeight", window.innerHeight || "No disponible"]
-          ]);
+          ];
+        }
 
-          renderRows(runtimeDataEl, [
+        function buildRuntimeRows(screenId) {
+          var screen = window.screen || {};
+
+          return [
             ["screenId", screenId],
-            ["tizenRuntime", window.tizen || /Tizen/i.test(navigator.userAgent || "") ? "true" : "false"],
-            ["timeZone", window.Intl && Intl.DateTimeFormat ? (function () {
-              try {
-                return Intl.DateTimeFormat().resolvedOptions().timeZone || "No disponible";
-              } catch (e) {
-                return "No disponible";
-              }
-            }()) : "No disponible"],
+            ["tizenRuntime", (window.tizen || /Tizen/i.test(navigator.userAgent || "")) ? "true" : "false"],
+            ["timeZone", getTimeZone()],
             ["connectionType", getConnectionValue("type")],
             ["effectiveType", getConnectionValue("effectiveType")],
             ["downlink", getConnectionValue("downlink")],
             ["rtt", getConnectionValue("rtt")],
-            ["saveData", getConnectionValue("saveData")]
-          ]);
+            ["saveData", getConnectionValue("saveData")],
+            ["orientation", screen.orientation && screen.orientation.type ? screen.orientation.type : "No disponible"]
+          ];
+        }
 
-          renderRows(compatibilityDataEl, [
+        function buildCompatibilityRows() {
+          return [
             ["localStorage", (function () {
               try {
                 return window.localStorage ? "true" : "false";
-              } catch (e) {
+              } catch (error) {
                 return "false";
               }
             }())],
             ["permissionsApi", hasPermissionsApi() ? "true" : "false"],
             ["networkInformationApi", hasNetworkInformationApi() ? "true" : "false"],
-            ["screenOrientation", screen.orientation && screen.orientation.type ? "true" : "false"]
-          ]);
+            ["screenOrientation", window.screen && window.screen.orientation && window.screen.orientation.type ? "true" : "false"]
+          ];
         }
 
-        refreshBtn.onclick = refreshView;
-        refreshView();
+        function refreshView() {
+          var screenId = getScreenId();
+
+          state.status = "Leyendo";
+          renderMeta();
+
+          screenIdValueEl.innerHTML = escapeHtml(screenId);
+
+          safeRender("Browser", browserDataEl, function () {
+            return buildBrowserRows(screenId);
+          });
+
+          safeRender("Screen", screenDataEl, function () {
+            return buildScreenRows();
+          });
+
+          safeRender("Runtime", runtimeDataEl, function () {
+            return buildRuntimeRows(screenId);
+          });
+
+          safeRender("Compatibilidad", compatibilityDataEl, function () {
+            return buildCompatibilityRows();
+          });
+
+          state.status = "Listo";
+          state.lastRefresh = new Date().toString();
+          renderMeta();
+          renderErrorLog();
+        }
+
+        function boot() {
+          try {
+            renderMeta();
+            renderErrorLog();
+            refreshView();
+          } catch (error) {
+            pushError("boot", error);
+          }
+        }
+
+        function onGlobalError(message, source, line, column, error) {
+          pushError("window.onerror", (message || "Error") + " @" + (source || "desconocido") + ":" + (line || 0) + ":" + (column || 0) + (error && error.stack ? " | " + error.stack : ""));
+          return false;
+        }
+
+        refreshBtn.onclick = function () {
+          try {
+            refreshView();
+          } catch (error) {
+            pushError("refreshBtn", error);
+          }
+        };
+
+        window.onerror = onGlobalError;
+
+        if (window.addEventListener) {
+          window.addEventListener("error", function (evt) {
+            if (evt && evt.message) {
+              pushError("error event", evt.message);
+            }
+          }, true);
+
+          if ("onunhandledrejection" in window) {
+            window.addEventListener("unhandledrejection", function (evt) {
+              pushError("unhandledrejection", evt && evt.reason ? evt.reason : "Promise rejection");
+            });
+          }
+
+          window.addEventListener("resize", function () {
+            try {
+              refreshView();
+            } catch (error) {
+              pushError("resize", error);
+            }
+          });
+        }
+
+        boot();
       }());
     </script>
   </body>
