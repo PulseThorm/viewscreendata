@@ -31,6 +31,24 @@
         margin-bottom: 8px;
       }
 
+      table.headlayout {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 8px;
+        table-layout: fixed;
+        margin-bottom: 8px;
+      }
+
+      td.headleft {
+        width: 50%;
+        vertical-align: top;
+      }
+
+      td.headright {
+        width: 50%;
+        vertical-align: top;
+      }
+
       .eyebrow {
         margin: 0 0 3px;
         color: #7dd3fc;
@@ -68,8 +86,7 @@
         padding: 10px;
       }
 
-      .idbar,
-      .statusbar {
+      .summaryblock {
         margin-bottom: 8px;
       }
 
@@ -161,26 +178,33 @@
   </head>
   <body>
     <div class="wrap">
-      <div class="topbar">
-        <div class="eyebrow">Browser telemetry</div>
-        <h1>Datos visibles</h1>
-        <div class="controls">
-          <button id="refreshBtn" type="button">Actualizar</button>
-        </div>
-      </div>
+      <table class="headlayout" cellspacing="0" cellpadding="0">
+        <tr>
+          <td class="headleft">
+            <div class="topbar">
+              <div class="eyebrow">Browser telemetry</div>
+              <h1>Datos visibles</h1>
+              <div class="controls">
+                <button id="refreshBtn" type="button">Actualizar</button>
+              </div>
+            </div>
+          </td>
+          <td class="headright">
+            <div class="summaryblock idbar">
+              <div class="key">Screen ID</div>
+              <div id="screenIdValue" class="idvalue">...</div>
+              <div class="idnote">Id calculado a partir del navegador y la pantalla.</div>
+            </div>
 
-      <div class="idbar">
-        <div class="key">Screen ID</div>
-        <div id="screenIdValue" class="idvalue">...</div>
-        <div class="idnote">Id calculado a partir del navegador y la pantalla.</div>
-      </div>
-
-      <div class="statusbar">
-        <h2>Estado y errores</h2>
-        <div id="statusData"></div>
-        <div class="statusmeta">Si una funcion falla, aparece aqui sin detener el resto de la pagina.</div>
-        <div id="errorData"></div>
-      </div>
+            <div class="summaryblock statusbar">
+              <h2>Estado y errores</h2>
+              <div id="statusData"></div>
+              <div class="statusmeta">Si una funcion falla, aparece aqui sin detener el resto de la pagina.</div>
+              <div id="errorData"></div>
+            </div>
+          </td>
+        </tr>
+      </table>
 
       <table class="layout" cellspacing="0" cellpadding="0">
         <tr>
