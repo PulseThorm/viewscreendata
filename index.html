@@ -290,6 +290,7 @@
         var statusDataEl = document.getElementById("statusData");
         var errorDataEl = document.getElementById("errorData");
         var refreshBtn = document.getElementById("refreshBtn");
+        var buildVersion = "top-top-2026.04.15";
 
         var state = {
           status: "Listo",
@@ -369,7 +370,9 @@
           statusDataEl.innerHTML =
             chip("Estado", state.status) +
             chip("Refresh", state.lastRefresh) +
-            chip("Errores", String(state.errors.length));
+            chip("Errores", String(state.errors.length)) +
+            chip("Build", buildVersion) +
+            chip("JS", probeModernSyntax());
         }
 
         function renderErrorLog() {
@@ -454,6 +457,15 @@
             return !!(navigator.connection || navigator.mozConnection || navigator.webkitConnection);
           } catch (error) {
             return false;
+          }
+        }
+
+        function probeModernSyntax() {
+          try {
+            new Function("const x = 1; return x;");
+            return "modern";
+          } catch (error) {
+            return "legacy";
           }
         }
 
