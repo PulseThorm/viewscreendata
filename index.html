@@ -40,12 +40,12 @@
       }
 
       td.headleft {
-        width: 25%;
+        width: 35%;
         vertical-align: top;
       }
 
       td.headright {
-        width: 75%;
+        width: 65%;
         vertical-align: top;
       }
 
@@ -61,6 +61,14 @@
         margin: 0;
         font-size: 24px;
         line-height: 1.1;
+      }
+
+      .screenid-inline {
+        color: #9eb0c8;
+        font-size: 13px;
+        font-weight: 400;
+        margin-left: 6px;
+        word-break: break-all;
       }
 
       .controls {
@@ -95,10 +103,50 @@
         font-size: 14px;
       }
 
+      .statusline,
+      .errorline {
+        display: block;
+      }
+
+      .statusitem,
+      .erroritem {
+        display: inline-block;
+        margin: 0 8px 6px 0;
+        padding: 4px 8px;
+        border: 1px solid #223449;
+        background: #0a1421;
+        font-size: 11px;
+        vertical-align: top;
+      }
+
+      .statusitem {
+        min-width: 90px;
+      }
+
+      .erroritem {
+        min-width: 140px;
+      }
+
+      .statusitem .label,
+      .erroritem .label {
+        display: block;
+        color: #9eb0c8;
+        margin-bottom: 2px;
+      }
+
+      .statusitem .value,
+      .erroritem .value {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        word-break: break-word;
+      }
+
       .statusmeta {
         margin: 0 0 6px;
         color: #9eb0c8;
         font-size: 11px;
+        clear: both;
       }
 
       .idvalue {
@@ -183,24 +231,20 @@
           <td class="headleft">
             <div class="topbar">
               <div class="eyebrow">Browser telemetry</div>
-              <h1>Datos visibles</h1>
+              <h1>Datos visibles <span id="screenIdValue" class="screenid-inline">...</span></h1>
+
               <div class="controls">
                 <button id="refreshBtn" type="button">Actualizar</button>
-              </div>
+              </div>  
+              
             </div>
           </td>
           <td class="headright">
-            <div class="summaryblock idbar">
-              <div class="key">Screen ID</div>
-              <div id="screenIdValue" class="idvalue">...</div>
-              <div class="idnote">Id calculado a partir del navegador y la pantalla.</div>
-            </div>
-
             <div class="summaryblock statusbar">
               <h2>Estado y errores</h2>
-              <div id="statusData"></div>
+              <div id="statusData" class="statusline"></div>
               <div class="statusmeta">Si una funcion falla, aparece aqui sin detener el resto de la pagina.</div>
-              <div id="errorData"></div>
+              <div id="errorData" class="errorline"></div>
             </div>
           </td>
         </tr>
@@ -292,6 +336,11 @@
           return '<div class="row"><div class="key">' + escapeHtml(label) + '</div><div class="value">' + escapeHtml(value) + '</div></div>';
         }
 
+        function chip(label, value, kind) {
+          var cls = kind === "error" ? "erroritem" : "statusitem";
+          return '<span class="' + cls + '"><span class="label">' + escapeHtml(label) + '</span><span class="value">' + escapeHtml(value) + '</span></span>';
+        }
+
         function renderRows(target, rows) {
           var html = "";
           var i;
@@ -318,9 +367,9 @@
 
         function renderMeta() {
           statusDataEl.innerHTML =
-            row("Estado", state.status) +
-            row("Ultimo refresh", state.lastRefresh) +
-            row("Errores", String(state.errors.length));
+            chip("Estado", state.status) +
+            chip("Refresh", state.lastRefresh) +
+            chip("Errores", String(state.errors.length));
         }
 
         function renderErrorLog() {
@@ -328,12 +377,12 @@
           var i;
 
           if (!state.errors.length) {
-            errorDataEl.innerHTML = '<div class="small">Sin errores detectados</div>';
+            errorDataEl.innerHTML = '<span class="small">Sin errores detectados</span>';
             return;
           }
 
           for (i = 0; i < state.errors.length; i += 1) {
-            html += row(state.errors[i][0], state.errors[i][1]).replace('class="row"', 'class="row errorrow"');
+            html += chip(state.errors[i][0], state.errors[i][1], "error");
           }
 
           errorDataEl.innerHTML = html;
