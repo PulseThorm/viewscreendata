@@ -117,6 +117,31 @@
         margin-top: 12px;
       }
 
+      .controls .toolbtn {
+        display: inline-block;
+        appearance: none;
+        border: 1px solid rgba(98, 214, 255, 0.28);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(18, 33, 52, 0.98), rgba(10, 18, 29, 0.98));
+        color: var(--text);
+        padding: 10px 16px;
+        margin-right: 8px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .controls .toolbtn:hover {
+        border-color: rgba(98, 214, 255, 0.48);
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(98, 214, 255, 0.06) inset;
+      }
+
+      .controls .toolbtn {
+        display: none;
+      }
+
       button {
         appearance: none;
         border: 1px solid rgba(98, 214, 255, 0.28);
@@ -421,6 +446,163 @@
         line-height: 1.35;
       }
 
+      .photopopup {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        padding: 18px;
+        background: rgba(0, 0, 0, 0.88);
+        overflow: auto;
+      }
+
+      .photopopup.show {
+        display: block;
+      }
+
+      .photo-sheet {
+        max-width: 1440px;
+        min-height: calc(100vh - 36px);
+        margin: 0 auto;
+        padding: 18px;
+        background: #ffffff;
+        color: #111111;
+        border: 4px solid #111111;
+        box-shadow: 0 24px 42px rgba(0, 0, 0, 0.45);
+      }
+
+      .photo-head {
+        display: table;
+        width: 100%;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #111111;
+      }
+
+      .photo-head-left,
+      .photo-head-right {
+        display: table-cell;
+        vertical-align: top;
+      }
+
+      .photo-head-right {
+        text-align: right;
+      }
+
+      .photo-title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .photo-note {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #333333;
+      }
+
+      .photo-close {
+        appearance: none;
+        border: 2px solid #111111;
+        background: #ffffff;
+        color: #111111;
+        padding: 10px 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .photo-summary {
+        margin-bottom: 12px;
+      }
+
+      .photo-pill {
+        display: inline-block;
+        margin: 0 8px 8px 0;
+        padding: 8px 10px;
+        border: 1px solid #111111;
+        background: #f6f6f6;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .photo-pill strong {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 13px;
+      }
+
+      .photo-grid {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 10px;
+        table-layout: fixed;
+      }
+
+      .photo-col {
+        width: 25%;
+        vertical-align: top;
+      }
+
+      .photo-panel {
+        padding: 10px;
+        border: 1px solid #111111;
+        background: #ffffff;
+      }
+
+      .photo-panel h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        line-height: 1.1;
+      }
+
+      .photo-wide {
+        margin-top: 2px;
+      }
+
+      .photopopup .row {
+        border-color: #111111;
+        background: #ffffff;
+      }
+
+      .photopopup .key {
+        color: #111111;
+        font-size: 11px;
+      }
+
+      .photopopup .value {
+        color: #111111;
+        font-size: 17px;
+        line-height: 1.3;
+        font-weight: 700;
+      }
+
+      .photopopup .small {
+        color: #333333;
+        font-size: 12px;
+      }
+
+      .photopopup .statusitem,
+      .photopopup .erroritem {
+        border-color: #111111;
+        background: #ffffff;
+        box-shadow: none;
+      }
+
+      .photopopup .statusmeta {
+        color: #555555;
+      }
+
+      .photopopup .statusbar,
+      .photopopup .panel,
+      .photopopup .probepanel {
+        background: #ffffff;
+        box-shadow: none;
+        border-color: #111111;
+      }
+
       @keyframes floatIn {
         0% {
           opacity: 0;
@@ -546,6 +728,7 @@
 
               <div class="controls">
                 <button id="refreshBtn" type="button">Actualizar</button>
+                <button id="popupBtn" type="button">Vista foto</button>
               </div>
             </div>
           </td>
@@ -594,10 +777,36 @@
          <div class="probenote">
            Pruebas en vivo. Cada chip va aislado para que un fallo no frene el panel. Verde = soportado, ámbar = parcial o legado, rojo = no soportado.
          </div>
-         <div id="probeData" class="probecloud"></div>
-       </div>
-     </div>
+           <div id="probeData" class="probecloud"></div>
+         </div>
 
+      <div id="photoPopup" class="photopopup" aria-hidden="true">
+        <div class="photo-sheet">
+          <div class="photo-head">
+            <div class="photo-head-left">
+              <div class="eyebrow">Browser photo popup</div>
+              <h2 class="photo-title">Angular / JS / jQuery</h2>
+              <div class="photo-note">Checklist para foto: Angular 20/15 standalone, Angular 10/8 NgModule, JS ES5/ES6 y jQuery.</div>
+            </div>
+            <div class="photo-head-right">
+              <button id="closePopupBtn" class="photo-close" type="button">Cerrar</button>
+            </div>
+          </div>
+
+          <div class="photo-summary">
+            <span class="photo-pill">Screen ID<strong id="popupScreenId">...</strong></span>
+            <span class="photo-pill">Build<strong id="popupBuild">...</strong></span>
+            <span class="photo-pill">JS<strong id="popupJs">...</strong></span>
+            <span class="photo-pill">jQuery<strong id="popupJQuery">...</strong></span>
+          </div>
+
+          <div class="photo-panel">
+            <h3>Angular checks</h3>
+            <div id="popupStackData"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
       (function () {
         var browserDataEl = document.getElementById("browserData");
@@ -609,13 +818,22 @@
         var errorDataEl = document.getElementById("errorData");
         var probeDataEl = document.getElementById("probeData");
         var refreshBtn = document.getElementById("refreshBtn");
+        var popupBtn = document.getElementById("popupBtn");
+        var photoPopupEl = document.getElementById("photoPopup");
+        var closePopupBtn = document.getElementById("closePopupBtn");
+        var popupScreenIdEl = document.getElementById("popupScreenId");
+        var popupBuildEl = document.getElementById("popupBuild");
+        var popupJsEl = document.getElementById("popupJs");
+        var popupJQueryEl = document.getElementById("popupJQuery");
+        var popupStackDataEl = document.getElementById("popupStackData");
         var buildVersion = "top-top-lab-2026.04.15";
 
         var state = {
           status: "Listo",
           lastRefresh: "Nunca",
           errors: [],
-          probeSummary: "0/0"
+          probeSummary: "0/0",
+          screenId: ""
         };
 
         function escapeHtml(value) {
@@ -712,6 +930,55 @@
           }
 
           errorDataEl.innerHTML = html;
+        }
+
+        function renderPhotoPopup(screenId) {
+          if (!photoPopupEl) {
+            return;
+          }
+
+          var photoStack;
+
+          if (popupScreenIdEl) {
+            popupScreenIdEl.innerHTML = escapeHtml(screenId || "No disponible");
+          }
+
+          if (popupBuildEl) {
+            popupBuildEl.innerHTML = escapeHtml(buildVersion);
+          }
+
+          photoStack = buildPhotoStackRows();
+
+          if (popupJsEl) {
+            popupJsEl.innerHTML = escapeHtml(photoStack.jsState);
+          }
+
+          if (popupJQueryEl) {
+            popupJQueryEl.innerHTML = escapeHtml(photoStack.jqueryState);
+          }
+
+          safeRender("Popup Stack", popupStackDataEl, function () {
+            return photoStack.rows;
+          });
+        }
+
+        function showPhotoPopup() {
+          if (!photoPopupEl) {
+            return;
+          }
+
+          renderPhotoPopup(state.screenId || getScreenId());
+          photoPopupEl.className = "photopopup show";
+          photoPopupEl.setAttribute("aria-hidden", "false");
+        }
+
+        function hidePhotoPopup() {
+          if (!photoPopupEl) {
+            return;
+          }
+
+          photoPopupEl.className = "photopopup";
+          photoPopupEl.setAttribute("aria-hidden", "true");
         }
 
         function hashString(input) {
@@ -1099,11 +1366,53 @@
           ];
         }
 
+        function buildPhotoStackRows() {
+          var es5 = probeSyntax("var a = 1; return a;");
+          var es6 = probeSyntax("const a = 1; let b = 2; return a + b;");
+          var hasPromise = !!window.Promise;
+          var hasMapSet = !!(window.Map && window.Set);
+          var hasMutationObserver = !!window.MutationObserver;
+          var hasLocalStorage = false;
+          var jqueryLike;
+          var angular20;
+          var angular15;
+          var angular10;
+          var angular8;
+
+          try {
+            hasLocalStorage = !!window.localStorage;
+          } catch (error) {
+            hasLocalStorage = false;
+          }
+
+          jqueryLike = es5 && !!document.querySelector && !!window.addEventListener;
+          angular20 = es6 && hasPromise && hasMapSet && hasMutationObserver && hasLocalStorage;
+          angular15 = es6 && hasPromise && hasMapSet && hasLocalStorage;
+          angular10 = es6 && hasPromise && hasLocalStorage;
+          angular8 = hasPromise && hasLocalStorage;
+
+          return {
+            jsState: es6 ? "ES6+" : "ES5",
+            jqueryState: jqueryLike ? "Probable" : "Riesgo",
+            rows: [
+              ["Angular 20 standalone", angular20 ? "Probable" : "Riesgo alto", "ES6 + Promise + storage + observers"],
+              ["Angular 15 standalone", angular15 ? "Probable" : "Riesgo", "ES6 + Promise + storage"],
+              ["Angular 10 NgModule", angular10 ? "Probable" : "Riesgo", "ES6 + Promise + storage"],
+              ["Angular 8 NgModule", angular8 ? "Probable" : "Riesgo", "Promise + storage"],
+              ["jQuery", jqueryLike ? "Probable" : "Riesgo", "DOM clásico + eventos"],
+              ["JavaScript ES5", es5 ? "Sí" : "No", "Parser base"],
+              ["JavaScript ES6", es6 ? "Sí" : "No", "let / const / arrow"],
+              ["JavaScript Promise", hasPromise ? "Sí" : "No", "Async básico"]
+            ]
+          };
+        }
+
         function refreshView() {
           var screenId = getScreenId();
           var probeResult;
 
           state.status = "Leyendo";
+          state.screenId = screenId;
           renderMeta();
 
           screenIdValueEl.innerHTML = escapeHtml(screenId);
@@ -1141,6 +1450,7 @@
           state.lastRefresh = new Date().toString();
           renderMeta();
           renderErrorLog();
+          renderPhotoPopup(screenId);
         }
 
         function boot() {
@@ -1166,6 +1476,30 @@
           }
         };
 
+        if (popupBtn) {
+          popupBtn.onclick = function () {
+            try {
+              showPhotoPopup();
+            } catch (error) {
+              pushError("popupBtn", error);
+            }
+          };
+        }
+
+        if (closePopupBtn) {
+          closePopupBtn.onclick = function () {
+            hidePhotoPopup();
+          };
+        }
+
+        if (photoPopupEl) {
+          photoPopupEl.onclick = function (evt) {
+            if (evt && evt.target === photoPopupEl) {
+              hidePhotoPopup();
+            }
+          };
+        }
+
         window.onerror = onGlobalError;
 
         if (window.addEventListener) {
@@ -1186,6 +1520,12 @@
               refreshView();
             } catch (error) {
               pushError("resize", error);
+            }
+          });
+
+          window.addEventListener("keydown", function (evt) {
+            if (evt && evt.key === "Escape") {
+              hidePhotoPopup();
             }
           });
         }
